@@ -315,7 +315,6 @@ function sass_task(){
         .pipe(sass.sync().on('error', sass.logError)) // Преобразуем Sass в CSS посредством gulp-sass
         .pipe(autoprefixer(['last 100 versions', '> 1%', 'ie 8', 'ie 7', 'ios 6', 'android 4'], { cascade: true })) // Создаем префиксы
         .pipe(dest(pubFolder+'/css'))
-        .pipe(browser.reload({stream: true}))
 }
 
 function uglify_task() {
