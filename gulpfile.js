@@ -159,30 +159,31 @@ var copy_timer;
 function build_web(done){
     clearTimeout(copy_timer)
 
-    //таймер сила!
     copy_timer = setTimeout(()=>{
-        //src([dstFolder+'app.js']).pipe(dest(bulFolder+'web/'));
+        let date = new Date();
 
-        let date      = new Date();
         let full_date = date.getFullYear() + '-' +
-                        ('0' + (date.getMonth()+1)).slice(-2) + '-' +
-                        ('0' + date.getDate()).slice(-2) + ' ' +
-                        ('0' + date.getHours()).slice(-2) + ':' +
-                        ('0' + date.getMinutes()).slice(-2);
+            ('0' + (date.getMonth()+1)).slice(-2) + '-' +
+            ('0' + date.getDate()).slice(-2) + ' ' +
+            ('0' + date.getHours()).slice(-2) + ':' +
+            ('0' + date.getMinutes()).slice(-2);
 
         src(dstFolder+'app.js')
             .pipe(replace('{__APP_HASH__}', getFileHash(dstFolder + '/app.js')))
             .pipe(replace('{__APP_BUILD__}', full_date))
             .pipe(dest(bulFolder+'web/'));
 
-        fs.readdirSync(dstFolder).filter(function (file) {
-            return fs.statSync(dstFolder+'/'+file).isDirectory();
-        }).forEach(folder => {
-            src([dstFolder+folder+'/'+folder+'.js']).pipe(dest(bulFolder+'web/plugins'));
-        });
-    },500)
+        fs.readdirSync(dstFolder)
+            .filter(function (file) {
+                return fs.statSync(dstFolder+'/'+file).isDirectory();
+            })
+            .forEach(folder => {
+                src([dstFolder+folder+'/'+folder+'.js'])
+                    .pipe(dest(bulFolder+'web/plugins'));
+            });
 
-    done();
+        done();
+    }, 500);
 }
 
 function write_manifest(done){
@@ -418,6 +419,14 @@ exports.pack_github  = series(sync_github, uglify_task, public_github, write_man
 exports.pack_plugins = series(plugins);
 exports.test         = series(test);
 exports.default = parallel(watch, browser_sync);
+exports.cloudflare = series(
+    merge,
+    plugins,
+    sass_task,
+    lang_task,
+    sync_web,
+    build_web
+);
 exports.debug = series(enable_debug_mode, this.default)
 exports.doc = series(sync_doc, buildDoc)
 exports.write_manifest = series(write_manifest)
